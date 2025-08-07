@@ -1,95 +1,92 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 import styles from "./page.module.css";
+import { ClipboardCopy, ClipboardCheck, RefreshCw } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [ssid, setSsid] = useState("");
+  const [passkey, setPasskey] = useState("");
+  const [copied, setCopied] = useState(false);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const genPasskey = (ssid) => {
+    const pairs = [
+      ["a", "5"],
+      ["b", "4"],
+      ["c", "3"],
+      ["d", "2"],
+      ["e", "1"],
+      ["f", "0"],
+      ["6", "9"],
+      ["7", "8"],
+    ];
+    const mapping = {};
+    pairs.forEach(([k, v]) => {
+      mapping[k] = v;
+      mapping[v] = k;
+    });
+
+    ssid = ssid.trim();
+    if (!ssid.startsWith("fh_")) return "";
+    const parts = ssid.split("_");
+    if (parts.length < 2) return "";
+    const middle = parts[1];
+    const transformed = [...middle]
+      .map((c) => mapping[c.toLowerCase()] || c)
+      .join("");
+    return "wlan" + transformed;
+  };
+
+  const handleGenerate = () => {
+    const result = genPasskey(ssid);
+    setPasskey(result || "Invalid input");
+  };
+
+  const handleCopy = () => {
+    if (passkey && passkey !== "Invalid input") {
+      navigator.clipboard.writeText(passkey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.card}>
+        <h1 className={styles.title}>FH WLAN Generator</h1>
+        <input
+          type="text"
+          placeholder="Enter SSID (e.g. fh_ab12cd_5G)"
+          value={ssid}
+          onChange={(e) => setSsid(e.target.value)}
+          className={styles.input}
+          style={{ background: "white", color: "black" }}
+        />
+        <button onClick={handleGenerate} className={styles.button}>
+          <RefreshCw size={16} style={{ marginRight: "6px" }} /> Generate
+          Passkey
+        </button>
+
+        {passkey && (
+          <div className={styles.result}>
+            <strong style={{ display: "block", marginBottom: "10px" }}>
+              {passkey}
+            </strong>
+            {passkey !== "Invalid input" && (
+              <button onClick={handleCopy} className={styles.copy}>
+                {copied ? (
+                  <ClipboardCheck size={16} />
+                ) : (
+                  <ClipboardCopy size={16} />
+                )}
+                &nbsp;{copied ? "Copied!" : "Copy"}
+              </button>
+            )}
+          </div>
+        )}
+
+        <footer className={styles.footer}>Nvermind</footer>
+      </div>
     </div>
   );
 }
